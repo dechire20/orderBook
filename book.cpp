@@ -129,24 +129,49 @@ std::vector<Trade> Book::add(Order order){
 void Book::cancel(Side side, uint64_t orderId){
 
     if (Side::Sell == side){
-        auto it = asks.begin();
-        while(it != asks.end()){
 
+        for (auto it = asks.begin(); it != asks.end(); ++it){
 
-
-
-            
-            if (it->second.empty()){
-                it = asks.erase(it);
+            auto orderIt = it->second.begin();
+            while (orderIt != it->second.end()){
+                if (orderIt->id == orderId){
+                    it->second.erase(orderIt);
+                    if (it->second.empty()){
+                        it = asks.erase(it);
+                        return;
+                    }
+                    break;
+                }
+                else{
+                    ++orderIt;
+                }
             }
-            else {
-                ++it;
-            }
-            
+
+
         }
     }
     else if(Side::Buy == side){
-        
+
+        for (auto it = bids.rbegin(); it != bids.rend(); ++it){
+
+            auto orderIt = it->second.begin();
+            while (orderIt != it->second.end()){
+                if (orderIt->id == orderId){
+                    it->second.erase(orderIt);
+                    if (it->second.empty()){
+                        auto eraseit = std::next(it).base();
+                        bids.erase(eraseit);
+                        return;
+                    }
+                    break;
+                }
+                else{
+                    ++orderIt;
+                }
+            }
+
+
+        }
     }
 }
 
