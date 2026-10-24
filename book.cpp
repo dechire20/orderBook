@@ -10,8 +10,12 @@
 
 
 std::vector<Trade> Book::add(Order order){
+
     uint32_t &orderQty = order.qty;
     std::vector<Trade> trades;
+    if (order.qty == 0){
+        return std::vector<Trade>{};
+    }
     if (order.side == Side::Sell){
 
 
@@ -119,6 +123,31 @@ std::vector<Trade> Book::add(Order order){
     }
 
     return std::vector<Trade>{};
+}
+
+
+void Book::cancel(Side side, uint64_t orderId){
+
+    if (Side::Sell == side){
+        auto it = asks.begin();
+        while(it != asks.end()){
+
+
+
+
+            
+            if (it->second.empty()){
+                it = asks.erase(it);
+            }
+            else {
+                ++it;
+            }
+            
+        }
+    }
+    else if(Side::Buy == side){
+        
+    }
 }
 
     
