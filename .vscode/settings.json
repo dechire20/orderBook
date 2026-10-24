@@ -1,0 +1,11 @@
+{
+    "C_Cpp.codeAnalysis.runAutomatically": false,
+    "github.copilot.enable": {
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
+    },
+    "github.copilot.nextEditSuggestions.enabled": false,
+    "geminicodeassist.inlineSuggestions.enableAuto": false
+}
