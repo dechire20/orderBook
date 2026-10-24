@@ -23,8 +23,8 @@ class Book {
 
 
         std::vector<Trade> add(Order);
-        void cancel(Side, uint64_t);
-        void modify();
+        bool cancel(Side, uint64_t);
+        bool modify(Side, uint64_t, uint32_t, uint32_t);
         Order best_bid();
         Order best_ask();
 

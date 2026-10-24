@@ -126,7 +126,7 @@ std::vector<Trade> Book::add(Order order){
 }
 
 
-void Book::cancel(Side side, uint64_t orderId){
+bool Book::cancel(Side side, uint64_t orderId){
 
     if (Side::Sell == side){
 
@@ -138,9 +138,9 @@ void Book::cancel(Side side, uint64_t orderId){
                     it->second.erase(orderIt);
                     if (it->second.empty()){
                         it = asks.erase(it);
-                        return;
+                        return true;
                     }
-                    break;
+                    return true;
                 }
                 else{
                     ++orderIt;
@@ -161,9 +161,9 @@ void Book::cancel(Side side, uint64_t orderId){
                     if (it->second.empty()){
                         auto eraseit = std::next(it).base();
                         bids.erase(eraseit);
-                        return;
+                        return true;
                     }
-                    break;
+                    return true;
                 }
                 else{
                     ++orderIt;
@@ -172,8 +172,21 @@ void Book::cancel(Side side, uint64_t orderId){
 
 
         }
+        return false;
     }
+
+    return false;
 }
 
+
+bool Book::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
+    if (cancel(side, orderId)){
+        add(Order{orderId, newPrice, newQty, side});
+        return true;
+    }
+    else{
+        return false;
+    }
+}
     
     
