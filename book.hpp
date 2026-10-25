@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <list>
 #include <map>
+#include <optional>
 #include <vector>
 #include <algorithm>
 
@@ -24,9 +25,11 @@ class Book {
 
         std::vector<Trade> add(Order);
         bool cancel(Side, uint64_t);
-        bool modify(Side, uint64_t, uint32_t, uint32_t);
-        Order best_bid();
-        Order best_ask();
+        std::vector<Trade> modify(Side, uint64_t, uint32_t, uint32_t);
+        std::optional<uint32_t> best_bid();
+        std::optional<uint32_t> best_ask();
+
+        bool containsOrderId(uint64_t);
 
 
 };

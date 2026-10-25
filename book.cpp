@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iterator>
+#include <optional>
 #include <vector>
 
 
@@ -16,6 +17,12 @@ std::vector<Trade> Book::add(Order order){
     if (order.qty == 0){
         return std::vector<Trade>{};
     }
+
+    if (containsOrderId(order.id)){
+        return std::vector<Trade>{};
+    }
+
+
     if (order.side == Side::Sell){
 
 
@@ -179,14 +186,52 @@ bool Book::cancel(Side side, uint64_t orderId){
 }
 
 
-bool Book::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
+std::vector<Trade> Book::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
     if (newQty != 0 && cancel(side, orderId)){
-        add(Order{orderId, newPrice, newQty, side});
-        return true;
+        return add(Order{orderId, newPrice, newQty, side});
     }
     else{
-        return false;
+        return std::vector<Trade>{};
     }
+}
+
+bool Book::containsOrderId(uint64_t id){
+    for (auto it = bids.begin(); it != bids.end(); ++it){
+        auto orderIt = it->second.begin();
+        while (orderIt != it->second.end()){
+            if (orderIt->id == id){
+                return true;
+            }
+            ++orderIt;
+        }
+    }
+
+    for (auto it = asks.begin(); it != asks.end(); ++it){
+        auto orderIt = it->second.begin();
+        while (orderIt != it->second.end()){
+            if (orderIt->id == id){
+                return true;
+            }
+            ++orderIt;
+        }
+    }
+
+    return false;
+}
+
+
+std::optional<uint32_t> Book::best_bid(){
+    if (!bids.empty()){
+        return bids.begin()->first;
+    }
+    return std::nullopt;
+}
+
+std::optional<uint32_t> Book::best_ask(){
+    if (!asks.empty()){
+        return asks.begin()->first;
+    }
+    return std::nullopt;
 }
     
     
