@@ -180,7 +180,7 @@ bool Book::cancel(Side side, uint64_t orderId){
 
 
 bool Book::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
-    if (cancel(side, orderId)){
+    if (newQty != 0 && cancel(side, orderId)){
         add(Order{orderId, newPrice, newQty, side});
         return true;
     }
