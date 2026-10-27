@@ -222,7 +222,7 @@ bool Book::containsOrderId(uint64_t id){
 
 std::optional<uint32_t> Book::best_bid(){
     if (!bids.empty()){
-        return bids.begin()->first;
+        return bids.rbegin()->first;
     }
     return std::nullopt;
 }
