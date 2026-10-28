@@ -189,11 +189,11 @@ Trade makeTrade(uint64_t makerId, uint64_t takerId, uint32_t price,
     return Trade{makerId, takerId, price, qty};
 }
 
-const BookSide &levels(const Book &book, Side side) {
+const BookSide &levels(const BookNaive &book, Side side) {
     return side == Side::Buy ? book.bids : book.asks;
 }
 
-std::vector<uint64_t> idsAt(const Book &book, Side side, uint32_t price) {
+std::vector<uint64_t> idsAt(const BookNaive &book, Side side, uint32_t price) {
     std::vector<uint64_t> ids;
     const BookSide &sideLevels = levels(book, side);
     auto level = sideLevels.find(price);
@@ -206,7 +206,7 @@ std::vector<uint64_t> idsAt(const Book &book, Side side, uint32_t price) {
     return ids;
 }
 
-std::vector<uint32_t> quantitiesAt(const Book &book, Side side,
+std::vector<uint32_t> quantitiesAt(const BookNaive &book, Side side,
                                    uint32_t price) {
     std::vector<uint32_t> quantities;
     const BookSide &sideLevels = levels(book, side);
@@ -220,7 +220,7 @@ std::vector<uint32_t> quantitiesAt(const Book &book, Side side,
     return quantities;
 }
 
-std::size_t restingCount(const Book &book, Side side) {
+std::size_t restingCount(const BookNaive &book, Side side) {
     std::size_t count = 0;
     for (const auto &level : levels(book, side)) {
         count += level.second.size();
@@ -235,7 +235,7 @@ std::size_t restingCount(const Book &book, Side side) {
 // Scenario 1: full fill
 
 TEST(full_fill_removes_fully_consumed_resting_ask) {
-    Book book;
+    BookNaive book;
     CHECK_TRADES(book.add(makeOrder(1, Side::Sell, 100, 50)), NO_TRADES);
 
     auto trades = book.add(makeOrder(2, Side::Buy, 100, 50));
@@ -248,7 +248,7 @@ TEST(full_fill_removes_fully_consumed_resting_ask) {
 }
 
 TEST(full_fill_removes_fully_consumed_resting_bid) {
-    Book book;
+    BookNaive book;
     CHECK_TRADES(book.add(makeOrder(1, Side::Buy, 100, 50)), NO_TRADES);
 
     auto trades = book.add(makeOrder(2, Side::Sell, 100, 50));
@@ -259,7 +259,7 @@ TEST(full_fill_removes_fully_consumed_resting_bid) {
 }
 
 TEST(full_fill_only_removes_the_touched_order) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     book.add(makeOrder(2, Side::Sell, 100, 10));
     book.add(makeOrder(3, Side::Sell, 105, 10));
@@ -274,7 +274,7 @@ TEST(full_fill_only_removes_the_touched_order) {
 // Scenario 2: partial fill
 
 TEST(partial_fill_keeps_remainder_on_resting_ask) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 50));
 
     auto trades = book.add(makeOrder(2, Side::Buy, 100, 20));
@@ -287,7 +287,7 @@ TEST(partial_fill_keeps_remainder_on_resting_ask) {
 }
 
 TEST(partial_fill_keeps_remainder_on_resting_bid) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Buy, 100, 50));
 
     auto trades = book.add(makeOrder(2, Side::Sell, 100, 20));
@@ -298,7 +298,7 @@ TEST(partial_fill_keeps_remainder_on_resting_bid) {
 }
 
 TEST(partial_fill_rests_the_unfilled_taker_quantity) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 20));
 
     auto trades = book.add(makeOrder(2, Side::Buy, 100, 50));
@@ -313,7 +313,7 @@ TEST(partial_fill_rests_the_unfilled_taker_quantity) {
 // Scenario 3: price priority
 
 TEST(price_priority_matches_best_ask_first) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(3, Side::Sell, 102, 10));
     book.add(makeOrder(1, Side::Sell, 101, 10));
     book.add(makeOrder(2, Side::Sell, 100, 10));
@@ -330,7 +330,7 @@ TEST(price_priority_matches_best_ask_first) {
 }
 
 TEST(price_priority_matches_best_bid_first) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Buy, 100, 10));
     book.add(makeOrder(2, Side::Buy, 102, 10));
     book.add(makeOrder(3, Side::Buy, 101, 10));
@@ -347,7 +347,7 @@ TEST(price_priority_matches_best_bid_first) {
 }
 
 TEST(price_priority_stops_at_the_limit_price) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     book.add(makeOrder(2, Side::Sell, 101, 10));
     book.add(makeOrder(3, Side::Sell, 102, 10));
@@ -365,7 +365,7 @@ TEST(price_priority_stops_at_the_limit_price) {
 // FIFO at the same price
 
 TEST(fifo_matches_oldest_order_at_the_same_price) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     book.add(makeOrder(2, Side::Sell, 100, 10));
     book.add(makeOrder(3, Side::Sell, 100, 10));
@@ -378,7 +378,7 @@ TEST(fifo_matches_oldest_order_at_the_same_price) {
 }
 
 TEST(fifo_keeps_partially_filled_order_in_front) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     book.add(makeOrder(2, Side::Sell, 100, 10));
     book.add(makeOrder(3, Side::Sell, 100, 10));
@@ -393,7 +393,7 @@ TEST(fifo_keeps_partially_filled_order_in_front) {
 }
 
 TEST(fifo_applies_to_bids_at_the_same_price) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Buy, 100, 10));
     book.add(makeOrder(2, Side::Buy, 100, 10));
 
@@ -408,7 +408,7 @@ TEST(fifo_applies_to_bids_at_the_same_price) {
 // Cancellation
 
 TEST(cancel_removes_resting_order) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     CHECK_TRUE(book.cancel(Side::Sell, 1));
@@ -417,7 +417,7 @@ TEST(cancel_removes_resting_order) {
 }
 
 TEST(cancel_removes_level_when_last_order_leaves) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     book.add(makeOrder(2, Side::Sell, 105, 10));
 
@@ -427,7 +427,7 @@ TEST(cancel_removes_level_when_last_order_leaves) {
 }
 
 TEST(cancel_middle_order_preserves_fifo_of_the_rest) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     book.add(makeOrder(2, Side::Sell, 100, 10));
     book.add(makeOrder(3, Side::Sell, 100, 10));
@@ -440,7 +440,7 @@ TEST(cancel_middle_order_preserves_fifo_of_the_rest) {
 }
 
 TEST(cancel_removes_bid_and_keeps_level_bookkeeping) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Buy, 100, 10));
     book.add(makeOrder(2, Side::Buy, 100, 10));
     book.add(makeOrder(3, Side::Buy, 99, 10));
@@ -455,7 +455,7 @@ TEST(cancel_removes_bid_and_keeps_level_bookkeeping) {
 }
 
 TEST(cancel_unknown_order_returns_false) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     CHECK_FALSE(book.cancel(Side::Sell, 999));
@@ -463,7 +463,7 @@ TEST(cancel_unknown_order_returns_false) {
 }
 
 TEST(cancel_on_wrong_side_returns_false) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     CHECK_FALSE(book.cancel(Side::Buy, 1));
@@ -471,7 +471,7 @@ TEST(cancel_on_wrong_side_returns_false) {
 }
 
 TEST(cancel_on_empty_book_returns_false) {
-    Book book;
+    BookNaive book;
 
     CHECK_FALSE(book.cancel(Side::Sell, 1));
     CHECK_FALSE(book.cancel(Side::Buy, 1));
@@ -480,7 +480,7 @@ TEST(cancel_on_empty_book_returns_false) {
 // Modification
 
 TEST(modify_changes_quantity_in_place) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 50));
 
     auto trades = book.modify(Side::Sell, 1, 100, 30);
@@ -491,7 +491,7 @@ TEST(modify_changes_quantity_in_place) {
 }
 
 TEST(modify_moves_order_to_new_price) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 50));
 
     auto trades = book.modify(Side::Sell, 1, 105, 50);
@@ -504,7 +504,7 @@ TEST(modify_moves_order_to_new_price) {
 }
 
 TEST(modify_into_the_book_executes_as_a_taker) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Buy, 100, 20));
     book.add(makeOrder(2, Side::Sell, 110, 20));
 
@@ -516,7 +516,7 @@ TEST(modify_into_the_book_executes_as_a_taker) {
 }
 
 TEST(modify_unknown_order_is_ignored) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     auto trades = book.modify(Side::Sell, 999, 101, 10);
@@ -527,7 +527,7 @@ TEST(modify_unknown_order_is_ignored) {
 }
 
 TEST(modify_to_zero_quantity_is_rejected) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     auto trades = book.modify(Side::Sell, 1, 100, 0);
@@ -539,7 +539,7 @@ TEST(modify_to_zero_quantity_is_rejected) {
 // Duplicate order ids
 
 TEST(duplicate_id_on_same_side_is_rejected) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     auto trades = book.add(makeOrder(1, Side::Sell, 101, 10));
@@ -553,7 +553,7 @@ TEST(duplicate_id_on_same_side_is_rejected) {
 }
 
 TEST(duplicate_id_across_sides_is_rejected) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Buy, 99, 10));
 
     auto trades = book.add(makeOrder(1, Side::Sell, 101, 10));
@@ -564,7 +564,7 @@ TEST(duplicate_id_across_sides_is_rejected) {
 }
 
 TEST(duplicate_id_never_executes_against_the_book) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
 
     auto trades = book.add(makeOrder(1, Side::Buy, 100, 10));
@@ -577,7 +577,7 @@ TEST(duplicate_id_never_executes_against_the_book) {
 }
 
 TEST(id_becomes_reusable_after_cancel) {
-    Book book;
+    BookNaive book;
     book.add(makeOrder(1, Side::Sell, 100, 10));
     CHECK_TRUE(book.cancel(Side::Sell, 1));
 
@@ -590,7 +590,7 @@ TEST(id_becomes_reusable_after_cancel) {
 // Empty book behaviour
 
 TEST(empty_book_has_no_best_prices) {
-    Book book;
+    BookNaive book;
 
     CHECK_EQ(book.best_bid(), std::nullopt);
     CHECK_EQ(book.best_ask(), std::nullopt);
@@ -600,7 +600,7 @@ TEST(empty_book_has_no_best_prices) {
 }
 
 TEST(empty_book_rests_incoming_orders_without_trading) {
-    Book book;
+    BookNaive book;
 
     CHECK_TRADES(book.add(makeOrder(1, Side::Buy, 100, 10)), NO_TRADES);
     CHECK_EQ(book.best_bid(), std::optional<uint32_t>{100});
@@ -614,7 +614,7 @@ TEST(empty_book_rests_incoming_orders_without_trading) {
 }
 
 TEST(non_crossing_orders_rest_without_trading) {
-    Book book;
+    BookNaive book;
 
     CHECK_TRADES(book.add(makeOrder(1, Side::Buy, 99, 10)), NO_TRADES);
     CHECK_TRADES(book.add(makeOrder(2, Side::Sell, 100, 10)), NO_TRADES);
@@ -624,7 +624,7 @@ TEST(non_crossing_orders_rest_without_trading) {
 }
 
 TEST(zero_quantity_orders_are_ignored) {
-    Book book;
+    BookNaive book;
 
     CHECK_TRADES(book.add(makeOrder(1, Side::Buy, 100, 0)), NO_TRADES);
     CHECK_TRADES(book.add(makeOrder(2, Side::Sell, 100, 0)), NO_TRADES);

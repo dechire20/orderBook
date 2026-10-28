@@ -10,7 +10,7 @@
 #include <vector>
 
 
-std::vector<Trade> Book::add(Order order){
+std::vector<Trade> BookNaive::add(Order order){
 
     uint32_t &orderQty = order.qty;
     std::vector<Trade> trades;
@@ -133,7 +133,7 @@ std::vector<Trade> Book::add(Order order){
 }
 
 
-bool Book::cancel(Side side, uint64_t orderId){
+bool BookNaive::cancel(Side side, uint64_t orderId){
 
     if (Side::Sell == side){
 
@@ -186,7 +186,7 @@ bool Book::cancel(Side side, uint64_t orderId){
 }
 
 
-std::vector<Trade> Book::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
+std::vector<Trade> BookNaive::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
     if (newQty != 0 && cancel(side, orderId)){
         return add(Order{orderId, newPrice, newQty, side});
     }
@@ -195,7 +195,7 @@ std::vector<Trade> Book::modify(Side side, uint64_t orderId, uint32_t newPrice, 
     }
 }
 
-bool Book::containsOrderId(uint64_t id){
+bool BookNaive::containsOrderId(uint64_t id){
     for (auto it = bids.begin(); it != bids.end(); ++it){
         auto orderIt = it->second.begin();
         while (orderIt != it->second.end()){
@@ -220,14 +220,14 @@ bool Book::containsOrderId(uint64_t id){
 }
 
 
-std::optional<uint32_t> Book::best_bid(){
+std::optional<uint32_t> BookNaive::best_bid(){
     if (!bids.empty()){
         return bids.rbegin()->first;
     }
     return std::nullopt;
 }
 
-std::optional<uint32_t> Book::best_ask(){
+std::optional<uint32_t> BookNaive::best_ask(){
     if (!asks.empty()){
         return asks.begin()->first;
     }

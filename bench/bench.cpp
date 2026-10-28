@@ -18,10 +18,6 @@
 #include <string>
 #include <vector>
 
-// The project currently ships one engine; the plan refers to it as BookNaive.
-// Aliasing here keeps the benchmark ready for faster variants later on.
-using BookNaive = Book;
-
 namespace {
 
 using Clock = std::chrono::steady_clock;
@@ -328,7 +324,7 @@ int main(int argc, char **argv) {
     constexpr uint64_t mixedOperations = 50000;
 
     std::printf("BookNaive throughput benchmark\n");
-    std::printf("engine:      Book (std::map<uint32_t, std::list<Order>>)\n");
+    std::printf("engine:      BookNaive (std::map<uint32_t, std::list<Order>>)\n");
     std::printf("repeats:     %zu measured + 1 warmup\n", repeats);
     std::printf("workloads:   insert=%llu resting, match=%llu resting + "
                 "%llu aggressive, cancel=%llu, mixed=%llu ops\n\n",
