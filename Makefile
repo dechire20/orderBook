@@ -5,11 +5,11 @@ ifeq ($(origin CXX), default)
 CXX := clang++
 endif
 
-TEST_SOURCES := tests/test_book.cpp book.cpp
-TEST_HEADERS := book.hpp order.hpp
+TEST_SOURCES := tests/test_book.cpp BookNaive.cpp
+TEST_HEADERS := BookNaive.hpp order.hpp
 TEST_BINARY := $(BUILD_DIR)/test_book
 
-BENCH_SOURCES := bench/bench.cpp book.cpp
+BENCH_SOURCES := bench/bench.cpp BookNaive.cpp
 BENCH_BINARY := $(BUILD_DIR)/bench_book
 
 .PHONY: all test bench clean

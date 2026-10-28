@@ -1,4 +1,4 @@
-// Throughput benchmark for BookNaive (the book.hpp / book.cpp baseline:
+// Throughput benchmark for BookNaive (the BookNaive.hpp / BookNaive.cpp baseline:
 // std::map of price levels holding std::list of orders).
 //
 //   make bench
@@ -7,7 +7,7 @@
 // Every workload is fully deterministic: the same sizes and seeds always
 // produce the same sequence of orders, so runs are comparable.
 
-#include "book.hpp"
+#include "BookNaive.hpp"
 
 #include <algorithm>
 #include <chrono>

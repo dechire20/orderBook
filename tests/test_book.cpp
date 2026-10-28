@@ -5,7 +5,7 @@
 //   ./build/test_book --list       list test names
 //   ./build/test_book --timeout 5  per-test timeout in seconds (default 10)
 
-#include "../book.hpp"
+#include "../BookNaive.hpp"
 
 #include <cstddef>
 #include <cstdint>

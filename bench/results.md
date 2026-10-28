@@ -1,7 +1,7 @@
 # BookNaive benchmark results
 
 Baseline throughput of `BookNaive`, the engine currently in
-[book.hpp](../book.hpp) / [book.cpp](../book.cpp): a
+[BookNaive.hpp](../BookNaive.hpp) / [BookNaive.cpp](../BookNaive.cpp): a
 `std::map<uint32_t, std::list<Order>>` per side. The benchmark source is
 [bench/bench.cpp](bench.cpp); `BookNaive` is an alias for `Book` there, so a
 faster engine can be added later without touching this harness.
