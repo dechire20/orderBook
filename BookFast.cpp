@@ -65,9 +65,11 @@ std::vector<Trade> BookFast::add(Order order){
             }
         }
         if (orderQty > 0){
-            asks[order.price].push_back(order);
 
-            auto aa = std::prev(asks[order.price].end());
+            auto &orders = asks[order.price];
+            orders.push_back(order);
+
+            auto aa = std::prev(orders.end());
             orderIndex.emplace(order.id, OrderLocation{order.side, order.price, aa});
         }
 
@@ -119,8 +121,10 @@ std::vector<Trade> BookFast::add(Order order){
             }
         }
         if (orderQty > 0){
-            bids[order.price].push_back(order);
-            auto aa = std::prev(bids[order.price].end());
+
+            auto &orders = bids[order.price];
+            orders.push_back(order);
+            auto aa = std::prev(orders.end());
             orderIndex.emplace(order.id, OrderLocation{order.side, order.price, aa});
 
         }
