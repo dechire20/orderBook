@@ -1,0 +1,7 @@
+# Python side of the simulator.
+#
+#   python3 -m pip install --user -r python/requirements.txt
+#
+# pybind11 is only needed to compile the extension (`make bindings`).
+pybind11>=2.11
+streamlit>=1.37

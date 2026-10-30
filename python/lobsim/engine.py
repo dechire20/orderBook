@@ -91,7 +91,6 @@ class MarketSession:
         _validate(price, qty)
         order_id = self._take_id()
         start = len(self.trades)
-        start = len(self.trades)
         raw = self._book.add(order_id, price, qty, self._side(is_buy))
         self._record(raw, order_id)
 
