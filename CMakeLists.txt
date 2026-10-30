@@ -4,6 +4,7 @@ project(orderbook LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if(MSVC)
   add_compile_options(/W4)
@@ -41,9 +42,33 @@ target_link_libraries(bench_book_fast PRIVATE orderbook)
 option(ORDERBOOK_BUILD_PYTHON "Build the pybind11 bindings" ON)
 if(ORDERBOOK_BUILD_PYTHON)
   find_package(pybind11 CONFIG QUIET)
+  if(NOT pybind11_FOUND)
+    # A pip-installed pybind11 is not on CMake's search path; ask it where it is.
+    find_package(Python3 COMPONENTS Interpreter Development.Module QUIET)
+    if(Python3_Interpreter_FOUND)
+      execute_process(
+        COMMAND ${Python3_EXECUTABLE} -m pybind11 --cmakedir
+        OUTPUT_VARIABLE _pybind11_cmakedir
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _pybind11_lookup
+      )
+      if(_pybind11_lookup EQUAL 0)
+        list(APPEND CMAKE_PREFIX_PATH "${_pybind11_cmakedir}")
+        find_package(pybind11 CONFIG QUIET)
+      endif()
+    endif()
+  endif()
+
   if(pybind11_FOUND)
-    pybind11_add_module(bookfast bindings/module.cpp)
-    target_link_libraries(bookfast PRIVATE orderbook)
+    # pybind11's modern tools drive FindPython3, so the dev headers are needed.
+    find_package(Python3 COMPONENTS Interpreter Development.Module QUIET)
+    if(Python3_FOUND)
+      pybind11_add_module(bookfast bindings/module.cpp)
+      target_link_libraries(bookfast PRIVATE orderbook)
+    else()
+      message(STATUS "Python development headers not found - skipping bindings/module.cpp")
+    endif()
   else()
     message(STATUS "pybind11 not found - skipping bindings/module.cpp")
   endif()

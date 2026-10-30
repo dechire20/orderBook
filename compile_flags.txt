@@ -1,3 +1,5 @@
 -std=c++17
 -Iinclude
 -I.
+-I/Library/Frameworks/Python.framework/Versions/3.14/include/python3.14
+-I/Users/myrna/Library/Python/3.14/lib/python/site-packages/pybind11/include

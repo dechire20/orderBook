@@ -8,6 +8,8 @@
 
 #include "BookFast.hpp"
 
+// Include paths for this file live in compile_flags.txt (clangd) and
+// .vscode/c_cpp_properties.json (cpptools).
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 

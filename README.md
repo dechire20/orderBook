@@ -47,25 +47,41 @@ current engine are in [bench/results.md](bench/results.md).
 
 ## CMake build
 
+Requires `cmake` (`python3 -m pip install --user cmake` or `brew install cmake`).
+
 [CMakeLists.txt](CMakeLists.txt) builds the same targets (`test_book_naive`,
 `test_book_fast`, `bench_book`, `bench_book_fast`) plus the optional `bookfast`
-Python module when pybind11 is installed:
+Python module. A separate build directory keeps it clear of the Makefile's
+`build/`:
 
 ```sh
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-ctest --test-dir build
+cmake -S . -B build-cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build build-cmake
+ctest --test-dir build-cmake
 ```
 
 ## Python bindings
 
 [bindings/module.cpp](bindings/module.cpp) exposes `BookFast` to Python through
-pybind11. It needs `python3 -m pip install pybind11`; without it the CMake build
-simply skips the module.
+pybind11:
 
 ```sh
+python3 -m pip install --user pybind11
 make bindings   # -> build/bookfast*.so
-python3 -c "import sys; sys.path.insert(0, 'build'); import bookfast; ..."
+```
+
+The CMake build finds a pip-installed pybind11 on its own and skips the module
+when pybind11 or the Python development headers are missing.
+
+```python
+import sys; sys.path.insert(0, "build")
+import bookfast
+
+book = bookfast.BookFast()
+book.add(1, 100, 50, bookfast.Side.Sell)
+book.add(2, 100, 20, bookfast.Side.Buy)   # -> [Trade(maker_id=1, taker_id=2, price=100, qty=20)]
+book.ask_levels                           # -> {100: [1]}
+book.cancel(1)
 ```
 
 ## Scenarios covered
