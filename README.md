@@ -11,6 +11,7 @@ bindings/       pybind11 module (module.cpp)
 python/         Streamlit simulator (app.py) and lobsim adapter package
 tests/          dependency-free test suite
 bench/          throughput benchmark + recorded results
+docs/           screenshots used by this README
 ```
 
 ## Building and testing
@@ -103,6 +104,10 @@ engine.cancel(1)
 - market depth chart (cumulative quantity, mid-price marker)
 - trade tape fed by the engine's `Trade` objects
 - open orders with cancel and modify (a modify that crosses executes as a taker)
+
+![Order book and market depth](docs/simulator-order-book.png)
+
+![Trade tape and open orders](docs/simulator-open-orders.png)
 
 ```sh
 python3 -m pip install --user -r python/requirements.txt
