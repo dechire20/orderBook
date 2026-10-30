@@ -20,13 +20,31 @@ LEVEL_HEIGHT = 35
 MAX_LEVELS_SHOWN = 12
 TRADE_TAPE_ROWS = 20
 
+LEVEL_STYLES = """
+<style>
+.ob-head, .ob-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+.ob-head { color: #888; font-size: 0.72rem; text-transform: uppercase; padding: 0 8px 4px; }
+.ob-row { position: relative; padding: 3px 8px; margin-bottom: 2px; border-radius: 4px; }
+.ob-bar { position: absolute; top: 0; bottom: 0; right: 0; border-radius: 4px; }
+.ob-price, .ob-qty { position: relative; z-index: 1; }
+</style>
+"""
+
 
 # --------------------------------------------------------------------- helpers
 
 
 def _session() -> MarketSession:
     if "session" not in st.session_state:
-        st.session_state.session = MarketSession()
+        session = MarketSession()
+        session.seed()
+        st.session_state.session = session
     return st.session_state.session
 
 
@@ -123,24 +141,22 @@ def render_metrics(session: MarketSession) -> None:
     )
 
 
-def _levels_table(rows: list[dict], peak: int) -> None:
+def _levels_table(rows: list[dict], peak: int, color: str) -> None:
     if not rows:
         st.caption("No resting orders")
         return
-    frame = pd.DataFrame(rows, columns=["price", "quantity", "orders"])
-    st.dataframe(
-        frame,
-        hide_index=True,
-        width="stretch",
-        height=LEVEL_HEIGHT * min(len(rows), MAX_LEVELS_SHOWN) + 38,
-        column_config={
-            "price": st.column_config.NumberColumn("Price", format="localized"),
-            "quantity": st.column_config.ProgressColumn(
-                "Quantity", format="%d", min_value=0, max_value=peak
-            ),
-            "orders": st.column_config.NumberColumn("Orders", width="small"),
-        },
-    )
+
+    html = ['<div class="ob-head"><span>Price</span><span>Quantity</span></div>']
+    for row in rows:
+        width = 100 * row["quantity"] / peak
+        html.append(
+            f'<div class="ob-row">'
+            f'<div class="ob-bar" style="width:{width:.1f}%;background:{color};opacity:0.30"></div>'
+            f'<span class="ob-price">{row["price"]:,}</span>'
+            f'<span class="ob-qty">{row["quantity"]:,}</span>'
+            f"</div>"
+        )
+    st.markdown("".join(html), unsafe_allow_html=True)
 
 
 def render_book(session: MarketSession) -> None:
@@ -151,11 +167,11 @@ def render_book(session: MarketSession) -> None:
     st.subheader("Order book")
     bid_col, ask_col = st.columns(2)
     with bid_col:
-        st.markdown(f":green[**BIDS**]")
-        _levels_table(bids, peak)
+        st.markdown(":green[**BIDS**]")
+        _levels_table(bids, peak, BID_COLOR)
     with ask_col:
-        st.markdown(f":red[**ASKS**]")
-        _levels_table(asks, peak)
+        st.markdown(":red[**ASKS**]")
+        _levels_table(asks, peak, ASK_COLOR)
 
 
 def render_depth_chart(session: MarketSession) -> None:
@@ -187,7 +203,7 @@ def render_depth_chart(session: MarketSession) -> None:
             .mark_rule(strokeDash=[4, 4], color="#888")
             .encode(x="mid:Q")
         )
-    st.altair_chart(chart, width="stretch")
+    st.altair_chart(chart.properties(height=300), width="stretch")
 
 
 def render_trades(session: MarketSession) -> None:
@@ -260,6 +276,7 @@ def main() -> None:
 
     session = _session()
 
+    st.markdown(LEVEL_STYLES, unsafe_allow_html=True)
     st.title("Limit Order Book Simulator")
     st.caption(
         "BookFast matching engine (C++17) driven through pybind11 — simulated liquidity, "
