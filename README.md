@@ -11,7 +11,7 @@ bindings/       pybind11 module (module.cpp)
 python/         Python examples that import the built module
 tests/          dependency-free test suite
 bench/          throughput benchmark + recorded results
-BookNaive.hpp   baseline engine header (kept at the root, as before)
+include/BookNaive.hpp   baseline engine header
 ```
 
 ## Building and testing
@@ -22,7 +22,7 @@ make test  # runs the suite against BookNaive and BookFast
 
 The suite lives in [tests/test_book.cpp](tests/test_book.cpp) and has no external
 dependencies. The same source is compiled twice: `build/test_book` links
-[BookNaive](BookNaive.hpp) and `build/test_book_fast` (built with
+[BookNaive](include/BookNaive.hpp) and `build/test_book_fast` (built with
 `-DBOOK_TEST_FAST`) links [BookFast](include/BookFast.hpp). Pass name filters to
 run a subset, list the test names, or adjust the per-test timeout:
 

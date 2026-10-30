@@ -90,6 +90,8 @@ class MarketSession:
     def submit(self, is_buy: bool, price: int, qty: int) -> SubmitResult:
         _validate(price, qty)
         order_id = self._take_id()
+        start = len(self.trades)
+        start = len(self.trades)
         raw = self._book.add(order_id, price, qty, self._side(is_buy))
         self._record(raw, order_id)
 
@@ -99,7 +101,7 @@ class MarketSession:
         if rested:
             self._orders[order_id] = OrderView(order_id, is_buy, price, remainder, traded)
 
-        return SubmitResult(order_id, traded, remainder, rested, self.trades[: -len(raw)])
+        return SubmitResult(order_id, traded, remainder, rested, self.trades[start:])
 
     def cancel(self, order_id: int) -> bool:
         if self._book.cancel(order_id):

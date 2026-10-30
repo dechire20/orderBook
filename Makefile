@@ -13,7 +13,7 @@ PY_LDFLAGS := -undefined dynamic_lookup
 endif
 
 ENGINE_SOURCES := src/BookNaive.cpp src/BookFast.cpp
-ENGINE_HEADERS := BookNaive.hpp include/BookFast.hpp include/Order.hpp
+ENGINE_HEADERS := include/BookNaive.hpp include/BookFast.hpp include/Order.hpp
 TEST_SOURCES := tests/test_book.cpp $(ENGINE_SOURCES)
 
 TEST_BINARY := $(BUILD_DIR)/test_book
