@@ -42,6 +42,7 @@ std::vector<Trade> BookFast::add(Order order){
                 restingOrder.qty -= tradeQty;
 
                 if (restingOrder.qty == 0){
+                    orderIndex.erase(restingOrder.id);
                     it->second.pop_front();
                 }
                 else{
@@ -63,6 +64,9 @@ std::vector<Trade> BookFast::add(Order order){
         }
         if (orderQty > 0){
             asks[order.price].push_back(order);
+
+            auto aa = std::prev(asks[order.price].end());
+            orderIndex.emplace(order.id, OrderLocation{order.side, order.price, aa});
         }
 
         return trades;      
@@ -93,6 +97,7 @@ std::vector<Trade> BookFast::add(Order order){
                 restingOrder.qty -= tradeQty;
 
                 if (restingOrder.qty == 0){
+                    orderIndex.erase(restingOrder.id);
                     it->second.pop_front();
                 }
                 else{
@@ -113,6 +118,9 @@ std::vector<Trade> BookFast::add(Order order){
         }
         if (orderQty > 0){
             bids[order.price].push_back(order);
+            auto aa = std::prev(bids[order.price].end());
+            orderIndex.emplace(order.id, OrderLocation{order.side, order.price, aa});
+
         }
 
         return trades;   
@@ -124,54 +132,55 @@ std::vector<Trade> BookFast::add(Order order){
 }
 
 
-bool BookFast::cancel(Side side, uint64_t orderId){
+bool BookFast::cancel(uint64_t orderId){
 
-    if (Side::Sell == side){
+    auto indexIt = orderIndex.find(orderId);
 
-        for (auto it = asks.begin(); it != asks.end(); ++it){
-
-            auto orderIt = it->second.begin();
-            while (orderIt != it->second.end()){
-                if (orderIt->id == orderId){
-                    it->second.erase(orderIt);
-                    if (it->second.empty()){
-                        it = asks.erase(it);
-                        return true;
-                    }
-                    return true;
-                }
-                else{
-                    ++orderIt;
-                }
-            }
-
-
-        }
-    }
-    else if(Side::Buy == side){
-
-        for (auto it = bids.rbegin(); it != bids.rend(); ++it){
-
-            auto orderIt = it->second.begin();
-            while (orderIt != it->second.end()){
-                if (orderIt->id == orderId){
-                    it->second.erase(orderIt);
-                    if (it->second.empty()){
-                        auto eraseit = std::next(it).base();
-                        bids.erase(eraseit);
-                        return true;
-                    }
-                    return true;
-                }
-                else{
-                    ++orderIt;
-                }
-            }
-
-
-        }
+    if (indexIt == orderIndex.end()){
         return false;
     }
+
+    auto level = indexIt->second.price;
+
+
+    if (Side::Sell == indexIt->second.side){
+
+
+        auto levelIt = asks.find(level);
+
+        if (levelIt == asks.end()){
+            return false;
+        }
+
+        levelIt->second.erase((indexIt->second.it));
+
+        if (levelIt->second.empty()){
+            asks.erase(levelIt);
+        }
+
+        orderIndex.erase(indexIt);
+
+        return true;
+    }
+    else if(Side::Buy == indexIt->second.side){
+
+
+        auto levelIt = bids.find(level);
+
+        if (levelIt == bids.end()){
+            return false;
+        }
+
+        levelIt->second.erase((indexIt->second.it));
+
+        if (levelIt->second.empty()){
+            bids.erase(levelIt);
+        }
+
+        orderIndex.erase(indexIt);
+
+        return true;
+    }    
 
     return false;
 }

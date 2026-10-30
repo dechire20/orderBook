@@ -13,7 +13,7 @@
 class BookFast {
     public:
         std::vector<Trade> add(Order);
-        bool cancel(Side, uint64_t);
+        bool cancel(uint64_t);
         std::vector<Trade> modify(Side, uint64_t, uint32_t, uint32_t);
         std::optional<uint32_t> best_bid();
         std::optional<uint32_t> best_ask();
