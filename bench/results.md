@@ -1,10 +1,12 @@
-# BookNaive benchmark results
+# Order book benchmark results
 
-Baseline throughput of `BookNaive`, the engine currently in
-[BookNaive.hpp](../BookNaive.hpp) / [BookNaive.cpp](../BookNaive.cpp): a
-`std::map<uint32_t, std::list<Order>>` per side. The benchmark source is
-[bench/bench.cpp](bench.cpp) and drives the engine through `BookNaive`'s public
-interface, so a faster engine can be compared without touching the harness.
+Throughput of the two engines: `BookNaive`, the baseline in
+[BookNaive.hpp](../BookNaive.hpp) / [BookNaive.cpp](../BookNaive.cpp) — a
+`std::map<uint32_t, std::list<Order>>` per side — and `BookFast` in
+[BookFast.hpp](../BookFast.hpp) / [BookFast.cpp](../BookFast.cpp), which adds
+an id index. The benchmark source is [bench/bench.cpp](bench.cpp) and drives
+both engines through the same public interface, selected at build time with
+`-DBENCH_BOOK_FAST`, so neither run touches the harness.
 
 ## Environment and build
 
@@ -96,21 +98,65 @@ Cost per insert roughly doubles every time the book doubles, so `add` is
 These numbers are the baseline to compare future engines against; re-record
 this file after changing the data structures so the comparison stays honest.
 
+## BookFast comparison (2026-10-30)
+
+`BookFast` replaces the linear duplicate-id scan with an
+`std::unordered_map<uint64_t, OrderLocation>` index (side, price, and
+`std::list` iterator) and derives the side from the index on cancel, so the
+public API no longer needs a `Side` argument for `cancel`/`modify`.
+
+Both engines were measured in the same session with the same compiler flags
+and the same `--repeats 5 --scaling` invocation used for the baseline above.
+Both runs printed checksum `0x57E3`, confirming they executed the identical
+operation stream. (Absolute numbers for the baseline differ from the original
+2026-10-27 recording because this machine ran faster; the paired comparison
+below is the meaningful one.)
+
+| Scenario | BookNaive median ops/s | BookFast median ops/s | Speedup |
+| --- | --- | --- | --- |
+| insert (rest only) | 13.5k | 4.28M | ≈ 315× |
+| match (1 trade per order) | 26.2k | 8.92M | ≈ 340× |
+| cancel | 85.2k | 15.52M | ≈ 182× |
+| mixed (insert/match/cancel) | 14.8k | 9.81M | ≈ 660× |
+
+Median times: insert 1,479.7 ms → 4.7 ms, match 764.0 ms → 2.2 ms, cancel
+117.4 ms → 0.6 ms, mixed 3,367.3 ms → 5.1 ms. Trades, adds, matches, cancels
+and failed cancels were identical for both engines, and both produced zero
+cancel misses.
+
+Scaling (`--scaling`, insert-only):
+
+| Resting orders | BookNaive ns/op | BookFast ns/op |
+| --- | --- | --- |
+| 2,000 | 4,517 | 103 |
+| 5,000 | 16,345 | 109 |
+| 10,000 | 37,060 | 112 |
+| 20,000 | 74,702 | 109 |
+
+`BookNaive` cost per insert grows with book depth (the duplicate-id scan is
+linear), which makes a full insert run O(n²). `BookFast` is essentially flat
+at ≈ 110 ns/op, so the insert run is O(n): the index lookup, price-level map
+insert and list append all cost amortized constant time at these depths.
+
 ## Reproducing
 
 ```sh
-make bench                                # default: 3 repeats, full workload set
-./build/bench_book --repeats 5 --scaling  # more repeats + insert-vs-depth table
+make bench                                # builds and runs both engines
+./build/bench_book --repeats 5 --scaling       # BookNaive baseline
+./build/bench_book_fast --repeats 5 --scaling  # BookFast
 ```
 
 The benchmark prints a checksum; it must match `0x57E3` for a genuinely
-comparable run.
+comparable run. `make bench` runs the default repeat count; use the two
+commands above for the paired comparison.
 
 ## Caveats
 
 - Measurements were taken on a shared, unpinned machine, so absolute numbers
   drift across sessions: insert medians ranged from 8.4k to 10.9k ops/s
   (≈ ±15 %) between runs, while the ordering of the scenarios never changed.
+  `BookFast` drifts more in relative terms (insert medians ranged from 4.3M to
+  7.0M ops/s across sessions), but its per-op cost stays flat with depth.
 - Timings include `std::list` node allocation, which is part of the engine's
   real cost, plus `-g` in the flags (no measurable effect at `-O2`).
 - Single-threaded only; the engine has no concurrency support yet.

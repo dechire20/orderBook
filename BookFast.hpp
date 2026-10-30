@@ -17,14 +17,21 @@ class BookFast {
         std::vector<Trade> modify(uint64_t, uint32_t, uint32_t);
         std::optional<uint32_t> best_bid();
         std::optional<uint32_t> best_ask();
+        bool containsOrderId(uint64_t) const;
+
+        // Read-only views of the price levels, mainly for tests and benchmarks.
+        const std::map<uint32_t, std::list<Order>> &bidLevels() const {
+            return bids;
+        }
+        const std::map<uint32_t, std::list<Order>> &askLevels() const {
+            return asks;
+        }
     private:
         struct OrderLocation{
             Side side;
             uint32_t price;
             std::list<Order>::iterator it;
         };
-
-        bool containsOrderId(uint64_t) const;
     private:
         std::map<uint32_t, std::list<Order>> bids;
         std::map<uint32_t, std::list<Order>> asks;

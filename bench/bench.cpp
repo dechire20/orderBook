@@ -1,5 +1,6 @@
-// Throughput benchmark for BookNaive (the BookNaive.hpp / BookNaive.cpp baseline:
-// std::map of price levels holding std::list of orders).
+// Throughput benchmark for the order book engines. The same binary can be
+// built against BookNaive (baseline) or BookFast (-DBENCH_BOOK_FAST), driving
+// both through their public interface.
 //
 //   make bench
 //   ./build/bench_book [--repeats N]
@@ -7,7 +8,11 @@
 // Every workload is fully deterministic: the same sizes and seeds always
 // produce the same sequence of orders, so runs are comparable.
 
+#if defined(BENCH_BOOK_FAST)
+#include "BookFast.hpp"
+#else
 #include "BookNaive.hpp"
+#endif
 
 #include <algorithm>
 #include <chrono>
@@ -21,6 +26,37 @@
 namespace {
 
 using Clock = std::chrono::steady_clock;
+
+#if defined(BENCH_BOOK_FAST)
+using Book = BookFast;
+constexpr const char *kEngineName = "BookFast";
+constexpr const char *kEngineDetail =
+    "BookFast (map levels + unordered_map id index)";
+#else
+using Book = BookNaive;
+constexpr const char *kEngineName = "BookNaive";
+constexpr const char *kEngineDetail =
+    "BookNaive (std::map<uint32_t, std::list<Order>>)";
+#endif
+
+using BookSide = std::map<uint32_t, std::list<Order>>;
+
+inline const BookSide &askLevelsOf(const Book &book) {
+#if defined(BENCH_BOOK_FAST)
+    return book.askLevels();
+#else
+    return book.asks;
+#endif
+}
+
+inline bool cancelById(Book &book, Side side, uint64_t id) {
+#if defined(BENCH_BOOK_FAST)
+    (void)side;
+    return book.cancel(id);
+#else
+    return book.cancel(side, id);
+#endif
+}
 
 // ---------------------------------------------------------------- utilities
 
@@ -61,7 +97,7 @@ struct WorkloadResult {
 // Resting-only inserts: bids and asks sit far apart so nothing matches.
 // Measures add() plus the per-order bookkeeping it performs.
 WorkloadResult workloadInsert(uint64_t count) {
-    BookNaive book;
+    Book book;
     WorkloadResult result;
     result.operations = count;
 
@@ -85,7 +121,7 @@ WorkloadResult workloadInsert(uint64_t count) {
 // Matching: an ask-only book is prefilled outside the timed region, then each
 // aggressive buy exactly consumes the best resting ask (one trade per order).
 WorkloadResult workloadMatch(uint64_t restingCount) {
-    BookNaive book;
+    Book book;
     WorkloadResult result;
     result.operations = restingCount;
 
@@ -112,7 +148,7 @@ WorkloadResult workloadMatch(uint64_t restingCount) {
 // Cancellation: bids spread over 100 price levels are prefilled outside the
 // timed region, then cancelled in a shuffled order.
 WorkloadResult workloadCancel(uint64_t count) {
-    BookNaive book;
+    Book book;
     WorkloadResult result;
     result.operations = count;
 
@@ -131,7 +167,7 @@ WorkloadResult workloadCancel(uint64_t count) {
 
     const auto start = Clock::now();
     for (uint64_t id : ids) {
-        if (book.cancel(Side::Buy, id)) {
+        if (cancelById(book, Side::Buy, id)) {
             ++result.cancels;
             result.checksum += 1;
         } else {
@@ -149,7 +185,7 @@ WorkloadResult workloadMixed(uint64_t count) {
     constexpr uint64_t maxBids = 20000;
     constexpr uint64_t maxAsks = 20000;
 
-    BookNaive book;
+    Book book;
     WorkloadResult result;
     result.operations = count;
 
@@ -207,8 +243,9 @@ WorkloadResult workloadMixed(uint64_t count) {
             }
         } else if (doAggress) {
             // Consume the best ask entirely so the incoming order never rests.
-            const uint32_t price = book.asks.begin()->first;
-            const uint32_t qty = book.asks.begin()->second.front().qty;
+            const uint32_t price = askLevelsOf(book).begin()->first;
+            const uint32_t qty =
+                askLevelsOf(book).begin()->second.front().qty;
             const auto trades =
                 book.add(Order{nextId++, price, qty, Side::Buy});
             result.trades += trades.size();
@@ -223,7 +260,7 @@ WorkloadResult workloadMixed(uint64_t count) {
             const uint64_t id = liveBids[index];
             liveBids[index] = liveBids.back();
             liveBids.pop_back();
-            if (book.cancel(Side::Buy, id)) {
+            if (cancelById(book, Side::Buy, id)) {
                 ++result.cancels;
                 result.checksum += 1;
             } else {
@@ -323,8 +360,8 @@ int main(int argc, char **argv) {
     constexpr uint64_t cancelOrders = 10000;
     constexpr uint64_t mixedOperations = 50000;
 
-    std::printf("BookNaive throughput benchmark\n");
-    std::printf("engine:      BookNaive (std::map<uint32_t, std::list<Order>>)\n");
+    std::printf("%s throughput benchmark\n", kEngineName);
+    std::printf("engine:      %s\n", kEngineDetail);
     std::printf("repeats:     %zu measured + 1 warmup\n", repeats);
     std::printf("workloads:   insert=%llu resting, match=%llu resting + "
                 "%llu aggressive, cancel=%llu, mixed=%llu ops\n\n",

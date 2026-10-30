@@ -69,8 +69,9 @@ std::vector<Trade> BookFast::add(Order order){
             auto &orders = asks[order.price];
             orders.push_back(order);
 
-            auto aa = std::prev(orders.end());
-            orderIndex.emplace(order.id, OrderLocation{order.side, order.price, aa});
+            orderIndex.emplace(order.id,
+                               OrderLocation{order.side, order.price,
+                                             std::prev(orders.end())});
         }
 
         return trades;      
@@ -124,8 +125,9 @@ std::vector<Trade> BookFast::add(Order order){
 
             auto &orders = bids[order.price];
             orders.push_back(order);
-            auto aa = std::prev(orders.end());
-            orderIndex.emplace(order.id, OrderLocation{order.side, order.price, aa});
+            orderIndex.emplace(order.id,
+                               OrderLocation{order.side, order.price,
+                                             std::prev(orders.end())});
 
         }
 
@@ -212,4 +214,18 @@ std::vector<Trade> BookFast::modify(uint64_t orderId, uint32_t newPrice, uint32_
 
 bool BookFast::containsOrderId(uint64_t id) const {
     return orderIndex.find(id) != orderIndex.end();
+}
+
+std::optional<uint32_t> BookFast::best_bid() {
+    if (bids.empty()){
+        return std::nullopt;
+    }
+    return bids.rbegin()->first;
+}
+
+std::optional<uint32_t> BookFast::best_ask() {
+    if (asks.empty()){
+        return std::nullopt;
+    }
+    return asks.begin()->first;
 }
