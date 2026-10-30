@@ -24,7 +24,7 @@ class BookFast {
             std::list<Order>::iterator it;
         };
 
-        bool containsOrderId(uint64_t);
+        bool containsOrderId(uint64_t) const;
     private:
         std::map<uint32_t, std::list<Order>> bids;
         std::map<uint32_t, std::list<Order>> asks;

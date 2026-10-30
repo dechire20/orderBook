@@ -206,26 +206,6 @@ std::vector<Trade> BookFast::modify(uint64_t orderId, uint32_t newPrice, uint32_
     }
 }
 
-bool BookFast::containsOrderId(uint64_t id){
-    for (auto it = bids.begin(); it != bids.end(); ++it){
-        auto orderIt = it->second.begin();
-        while (orderIt != it->second.end()){
-            if (orderIt->id == id){
-                return true;
-            }
-            ++orderIt;
-        }
-    }
-
-    for (auto it = asks.begin(); it != asks.end(); ++it){
-        auto orderIt = it->second.begin();
-        while (orderIt != it->second.end()){
-            if (orderIt->id == id){
-                return true;
-            }
-            ++orderIt;
-        }
-    }
-
-    return false;
+bool BookFast::containsOrderId(uint64_t id) const {
+    return orderIndex.find(id) != orderIndex.end();
 }
