@@ -25,7 +25,7 @@ FAST_BENCH_BINARY := $(BUILD_DIR)/bench_book_fast
 
 BINDING_SOURCES := bindings/module.cpp $(ENGINE_SOURCES)
 
-.PHONY: all test test-naive test-fast bench bench-naive bench-fast bindings clean
+.PHONY: all test test-naive test-fast bench bench-naive bench-fast bindings app demo clean
 
 all: test
 
@@ -67,5 +67,15 @@ bindings: $(BINDING_SOURCES) $(ENGINE_HEADERS) | $(BUILD_DIR)
 		-o $(BUILD_DIR)/book$$($(PYTHON) -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))') \
 		$(BINDING_SOURCES)
 
+# Streamlit simulator (needs `python3 -m pip install -r python/requirements.txt`).
+app: $(BINDING_SOURCES) $(ENGINE_HEADERS) | $(BUILD_DIR)
+	@$(MAKE) --no-print-directory bindings
+	$(PYTHON) -m streamlit run python/app.py
+
+demo: $(BINDING_SOURCES) $(ENGINE_HEADERS) | $(BUILD_DIR)
+	@$(MAKE) --no-print-directory bindings
+	$(PYTHON) python/demo.py
+
 clean:
 	rm -rf $(BUILD_DIR)
+	find python -name __pycache__ -type d -prune -exec rm -rf {} +
