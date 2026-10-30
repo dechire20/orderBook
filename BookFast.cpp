@@ -1,4 +1,6 @@
 #include "BookFast.hpp"
+#include "order.hpp"
+#include <cstdint>
 
 
 std::vector<Trade> BookFast::add(Order order){
@@ -186,8 +188,17 @@ bool BookFast::cancel(uint64_t orderId){
 }
 
 
-std::vector<Trade> BookFast::modify(Side side, uint64_t orderId, uint32_t newPrice, uint32_t newQty){
-    if (newQty != 0 && cancel(side, orderId)){
+std::vector<Trade> BookFast::modify(uint64_t orderId, uint32_t newPrice, uint32_t newQty){
+
+    auto indexIt = orderIndex.find(orderId);
+
+    if (indexIt == orderIndex.end()){
+        return {};
+    }
+
+    Side side = indexIt->second.side;
+
+    if (newQty != 0 && cancel(orderId)){
         return add(Order{orderId, newPrice, newQty, side});
     }
     else{
