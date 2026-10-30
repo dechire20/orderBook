@@ -8,9 +8,12 @@ Run it with:
 
 from __future__ import annotations
 
+import sys
+
 import altair as alt
 import pandas as pd
 import streamlit as st
+from streamlit import runtime
 
 from lobsim import MarketSession
 
@@ -303,4 +306,12 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    # Running `python3 python/app.py` outside `streamlit run` only emits
+    # "missing ScriptRunContext" warnings, so fail with the right command.
+    if "streamlit" not in sys.modules or not runtime.exists():
+        raise SystemExit(
+            "This is a Streamlit app. Start it with:\n"
+            "  make app\n"
+            "  python3 -m streamlit run python/app.py"
+        )
     main()
