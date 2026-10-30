@@ -5,13 +5,12 @@ Price-time priority limit order book matching engine in C++17.
 # project layout
 
 ```
-include/        public headers (Order.hpp, BookFast.hpp)
+include/        public headers (Order.hpp, BookFast.hpp, BookNaive.hpp)
 src/            engine implementations (BookFast.cpp, BookNaive.cpp)
 bindings/       pybind11 module (module.cpp)
-python/         Python examples that import the built module
+python/         Streamlit simulator (app.py) and lobsim adapter package
 tests/          dependency-free test suite
 bench/          throughput benchmark + recorded results
-include/BookNaive.hpp   baseline engine header
 ```
 
 ## Building and testing
@@ -68,31 +67,51 @@ pybind11:
 
 ```sh
 python3 -m pip install --user pybind11
-make bindings   # -> build/bookfast*.so
+make bindings   # -> build/book*.so
 ```
 
 The CMake build finds a pip-installed pybind11 on its own and skips the module
 when pybind11 or the Python development headers are missing.
 
-A runnable example lives in [python/bookfast_demo.py](python/bookfast_demo.py);
-it locates the built module and prints a short trading session:
+A runnable example lives in [python/demo.py](python/demo.py); it locates the
+built module and prints a short trading session:
 
 ```sh
-make bindings && python3 python/bookfast_demo.py
+make demo        # builds the module, then runs python/demo.py
 ```
 
 Minimal usage:
 
 ```python
 import sys; sys.path.insert(0, "build")
-import bookfast
+import book   # build/book*.so
 
-book = bookfast.BookFast()
-book.add(1, 100, 50, bookfast.Side.Sell)
-book.add(2, 100, 20, bookfast.Side.Buy)   # -> [Trade(maker_id=1, taker_id=2, price=100, qty=20)]
-book.ask_levels                           # -> {100: [1]}
-book.cancel(1)
+engine = book.BookFast()
+engine.add(1, 100, 50, book.Side.Sell)
+engine.add(2, 100, 20, book.Side.Buy)   # -> [Trade(maker_id=1, taker_id=2, price=100, qty=20)]
+engine.ask_levels                       # -> {100: [1]}
+engine.cancel(1)
 ```
+
+## Simulator (Streamlit)
+
+[python/app.py](python/app.py) is a single-page trading terminal for the engine:
+
+- market overview: best bid, best ask, spread, last price, resting orders, volume
+- order entry (BUY/SELL, price, quantity) — orders go straight to `BookFast`
+- live order book with per-level liquidity bars, bids high→low, asks low→high
+- market depth chart (cumulative quantity, mid-price marker)
+- trade tape fed by the engine's `Trade` objects
+- open orders with cancel and modify (a modify that crosses executes as a taker)
+
+```sh
+python3 -m pip install --user -r python/requirements.txt
+make app         # builds the module, then `streamlit run python/app.py`
+```
+
+[python/lobsim/engine.py](python/lobsim/engine.py) wraps the extension: matching
+is done entirely in C++, and the wrapper mirrors resting orders so the UI can
+show price levels and partially filled quantities.
 
 ## Scenarios covered
 
