@@ -1,9 +1,9 @@
 # Order book benchmark results
 
 Throughput of the two engines: `BookNaive`, the baseline in
-[BookNaive.hpp](../BookNaive.hpp) / [BookNaive.cpp](../BookNaive.cpp) — a
+[BookNaive.hpp](../BookNaive.hpp) / [BookNaive.cpp](../src/BookNaive.cpp) — a
 `std::map<uint32_t, std::list<Order>>` per side — and `BookFast` in
-[BookFast.hpp](../BookFast.hpp) / [BookFast.cpp](../BookFast.cpp), which adds
+[BookFast.hpp](../include/BookFast.hpp) / [BookFast.cpp](../src/BookFast.cpp), which adds
 an id index. The benchmark source is [bench/bench.cpp](bench.cpp) and drives
 both engines through the same public interface, selected at build time with
 `-DBENCH_BOOK_FAST`, so neither run touches the harness.

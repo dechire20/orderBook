@@ -1,6 +1,4 @@
 # Build artifacts
-main
-main.dSYM/
 build/
 *.o
 *.dSYM/

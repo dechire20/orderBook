@@ -2,6 +2,17 @@
 
 Price-time priority limit order book matching engine in C++17.
 
+# project layout
+
+```
+include/        public headers (Order.hpp, BookFast.hpp)
+src/            engine implementations (BookFast.cpp, BookNaive.cpp)
+bindings/       pybind11 module (module.cpp)
+tests/          dependency-free test suite
+bench/          throughput benchmark + recorded results
+BookNaive.hpp   baseline engine header (kept at the root, as before)
+```
+
 ## Building and testing
 
 ```sh
@@ -11,8 +22,8 @@ make test  # runs the suite against BookNaive and BookFast
 The suite lives in [tests/test_book.cpp](tests/test_book.cpp) and has no external
 dependencies. The same source is compiled twice: `build/test_book` links
 [BookNaive](BookNaive.hpp) and `build/test_book_fast` (built with
-`-DBOOK_TEST_FAST`) links [BookFast](BookFast.hpp). Pass name filters to run a
-subset, list the test names, or adjust the per-test timeout:
+`-DBOOK_TEST_FAST`) links [BookFast](include/BookFast.hpp). Pass name filters to
+run a subset, list the test names, or adjust the per-test timeout:
 
 ```sh
 ./build/test_book_fast fifo modify
@@ -33,6 +44,29 @@ make bench
 
 Workload definitions, the test environment, and recorded results for the
 current engine are in [bench/results.md](bench/results.md).
+
+## CMake build
+
+[CMakeLists.txt](CMakeLists.txt) builds the same targets (`test_book_naive`,
+`test_book_fast`, `bench_book`, `bench_book_fast`) plus the optional `bookfast`
+Python module when pybind11 is installed:
+
+```sh
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+ctest --test-dir build
+```
+
+## Python bindings
+
+[bindings/module.cpp](bindings/module.cpp) exposes `BookFast` to Python through
+pybind11. It needs `python3 -m pip install pybind11`; without it the CMake build
+simply skips the module.
+
+```sh
+make bindings   # -> build/bookfast*.so
+python3 -c "import sys; sys.path.insert(0, 'build'); import bookfast; ..."
+```
 
 ## Scenarios covered
 

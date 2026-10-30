@@ -5,8 +5,8 @@
 //   ./build/test_book_fast --list       list test names
 //   ./build/test_book_fast --timeout 5  per-test timeout in seconds (default 10)
 
-#include "../BookFast.hpp"
-#include "../BookNaive.hpp"
+#include "BookFast.hpp"
+#include "BookNaive.hpp"
 
 #include <cstddef>
 #include <cstdint>
