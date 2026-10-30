@@ -8,6 +8,7 @@ Price-time priority limit order book matching engine in C++17.
 include/        public headers (Order.hpp, BookFast.hpp)
 src/            engine implementations (BookFast.cpp, BookNaive.cpp)
 bindings/       pybind11 module (module.cpp)
+python/         Python examples that import the built module
 tests/          dependency-free test suite
 bench/          throughput benchmark + recorded results
 BookNaive.hpp   baseline engine header (kept at the root, as before)
@@ -72,6 +73,15 @@ make bindings   # -> build/bookfast*.so
 
 The CMake build finds a pip-installed pybind11 on its own and skips the module
 when pybind11 or the Python development headers are missing.
+
+A runnable example lives in [python/bookfast_demo.py](python/bookfast_demo.py);
+it locates the built module and prints a short trading session:
+
+```sh
+make bindings && python3 python/bookfast_demo.py
+```
+
+Minimal usage:
 
 ```python
 import sys; sys.path.insert(0, "build")

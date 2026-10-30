@@ -64,7 +64,7 @@ bench-fast: $(FAST_BENCH_BINARY)
 bindings: $(BINDING_SOURCES) $(ENGINE_HEADERS) | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -shared -fPIC $(PY_LDFLAGS) \
 		$$($(PYTHON) -m pybind11 --includes) \
-		-o $(BUILD_DIR)/bookfast$$($(PYTHON) -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))') \
+		-o $(BUILD_DIR)/book$$($(PYTHON) -c 'import sysconfig; print(sysconfig.get_config_var("EXT_SUFFIX"))') \
 		$(BINDING_SOURCES)
 
 clean:

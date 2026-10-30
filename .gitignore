@@ -4,5 +4,7 @@ build-cmake/
 *.o
 *.dSYM/
 
+__pycache__/
+
 # macOS
 .DS_Store
