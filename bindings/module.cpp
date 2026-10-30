@@ -1,21 +1,16 @@
-// pybind11 extension exposing BookFast to Python.
-//
-//   make bindings            # writes build/bookfast.<ext-suffix>
-//   cmake -B build && cmake --build build   # builds it when pybind11 is found
-//
-// The module is a thin wrapper: it forwards to BookFast and converts the
-// resting book to plain Python objects.
+
 
 #include "BookFast.hpp"
+#include "order.hpp"
 
-// Include paths for this file live in compile_flags.txt (clangd) and
-// .vscode/c_cpp_properties.json (cpptools).
+
+#include <cstdint>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <string>
 
 namespace py = pybind11;
 
-namespace {
 
 py::dict levelSnapshot(const std::map<uint32_t, std::list<Order>> &levels) {
     py::dict snapshot;
@@ -29,18 +24,17 @@ py::dict levelSnapshot(const std::map<uint32_t, std::list<Order>> &levels) {
     return snapshot;
 }
 
-} // namespace
 
-PYBIND11_MODULE(bookfast, m) {
-    m.doc() = "Price-time priority limit order book (BookFast engine)";
+
+PYBIND11_MODULE(book, m){
+    m.doc() = "Python interface for BookFast";
 
     py::enum_<Side>(m, "Side")
         .value("Buy", Side::Buy)
         .value("Sell", Side::Sell);
-
+    
     py::class_<Order>(m, "Order")
-        .def(py::init<uint64_t, uint32_t, uint32_t, Side>(), py::arg("id"),
-             py::arg("price"), py::arg("qty"), py::arg("side"))
+        .def(py::init<uint64_t, uint32_t, uint32_t, Side>(), py::arg("id"), py::arg("price"), py::arg("qty"), py::arg("side"))
         .def_readwrite("id", &Order::id)
         .def_readwrite("price", &Order::price)
         .def_readwrite("qty", &Order::qty)
@@ -52,7 +46,8 @@ PYBIND11_MODULE(bookfast, m) {
                    ", side=" +
                    (order.side == Side::Buy ? "Side.Buy" : "Side.Sell") + ")";
         });
-
+        
+    
     py::class_<Trade>(m, "Trade")
         .def_readonly("maker_id", &Trade::maker_id)
         .def_readonly("taker_id", &Trade::taker_id)
@@ -64,6 +59,8 @@ PYBIND11_MODULE(bookfast, m) {
                    ", price=" + std::to_string(trade.price) +
                    ", qty=" + std::to_string(trade.qty) + ")";
         });
+
+
 
     py::class_<BookFast>(m, "BookFast")
         .def(py::init<>())
@@ -90,4 +87,7 @@ PYBIND11_MODULE(bookfast, m) {
             "ask_levels",
             [](const BookFast &book) { return levelSnapshot(book.askLevels()); },
             "Price -> resting order ids, best ask first.");
+
+
+    
 }
